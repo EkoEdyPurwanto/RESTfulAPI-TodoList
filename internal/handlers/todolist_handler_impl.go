@@ -34,21 +34,21 @@ func (handler *TodoListHandlerImpl) Create(ctx echo.Context, request requestAndr
 	if err != nil {
 		helper.BadRequest(err, ctx)
 		handler.Logging.Error(err)
-		return nil
+		return err
 	}
 
 	SQL, err := handler.DB.Exec("INSERT INTO TodoList(title, description) VALUES(?, ?)", request.Title, request.Description)
 	if err != nil {
 		helper.InternalServerError(err, ctx)
 		handler.Logging.Error(err)
-		return nil
+		return err
 	}
 
 	lastID, err := SQL.LastInsertId()
 	if err != nil {
 		helper.InternalServerError(err, ctx)
 		handler.Logging.Error(err)
-		return nil
+		return err
 	}
 
 	response := domain.Response{
@@ -74,7 +74,7 @@ func (handler *TodoListHandlerImpl) ReadAll(ctx echo.Context) error {
 	if err != nil {
 		helper.InternalServerError(err, ctx)
 		handler.Logging.Error(err)
-		return nil
+		return err
 	}
 
 	for rows.Next() {
@@ -109,7 +109,7 @@ func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) e
 	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=?", todolistId).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
 		handler.Logging.Error("Failed to check Todo existence in the database")
-		return nil
+		return err
 	}
 
 	if count == 0 {
@@ -121,7 +121,7 @@ func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) e
 	if err != nil {
 		helper.InternalServerError(err, ctx)
 		handler.Logging.Error(err)
-		return nil
+		return err
 	}
 
 	for rows.Next() {
@@ -155,14 +155,14 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 	if err != nil {
 		handler.Logging.Error(err)
 		panic(err)
-		return nil
+		return err
 	}
 
 	var count int
 	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=?", todolistId).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
 		handler.Logging.Error("Failed to check Todo existence in the database")
-		return nil
+		return err
 	}
 
 	if count == 0 {
@@ -179,7 +179,7 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 	if err != nil {
 		helper.BadRequest(err, ctx)
 		handler.Logging.Error(err)
-		return nil
+		return err
 	}
 
 	if request.Title != "" && request.Description == "" {
@@ -216,14 +216,14 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 	if err != nil {
 		handler.Logging.Error(err)
 		panic(err)
-		return nil
+		return err
 	}
 
 	var count int
 	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=?", todolistId).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
 		handler.Logging.Error("Failed to check Todo existence in the database")
-		return nil
+		return err
 	}
 
 	if count == 0 {
@@ -236,7 +236,7 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 	if err != nil {
 		helper.InternalServerError(err, ctx)
 		handler.Logging.Error(err)
-		return nil
+		return err
 	}
 
 	apiResponse := domain.Response{
@@ -260,7 +260,7 @@ func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) err
 	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=?", todolistId).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
 		handler.Logging.Error(err)
-		return nil
+		return err
 	}
 
 	if count == 0 {
@@ -271,7 +271,7 @@ func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) err
 	if _, err := handler.DB.Exec("DELETE FROM TodoList WHERE id=?", todolistId); err != nil {
 		helper.InternalServerError(err, ctx)
 		handler.Logging.Error(err)
-		return nil
+		return err
 	}
 
 	apiResponse := domain.Response{
