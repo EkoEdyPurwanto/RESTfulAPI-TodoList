@@ -1,43 +1,46 @@
 package helper
 
 import (
-	"fmt"
+	"LearnECHO/models/domain"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
-func InternalServerError(err error, c echo.Context) {
-	code := http.StatusInternalServerError
-	if he, ok := err.(*echo.HTTPError); ok {
-		code = he.Code
+func InternalServerError(err error, ctx echo.Context) {
+	ctx.Response().Header().Add("Content-Type", "application/json")
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
+	apiResponse := domain.Response{
+		Status:  http.StatusInternalServerError,
+		Message: "internal server error",
+		Data:    err.Error(),
 	}
-	c.Logger().Error(err)
-	errorPage := fmt.Sprintf("%d.html", code)
-	if err := c.File(errorPage); err != nil {
-		c.Logger().Error(err)
-	}
+	ctx.Response().WriteHeader(apiResponse.Status)
+	WriteToResponseBody(ctx, apiResponse)
 }
 
-func BadRequest(err error, c echo.Context) {
-	code := http.StatusBadRequest
-	if he, ok := err.(*echo.HTTPError); ok {
-		code = he.Code
+func BadRequest(err error, ctx echo.Context) {
+	ctx.Response().Header().Add("Content-Type", "application/json")
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
+	apiResponse := domain.Response{
+		Status:  http.StatusBadRequest,
+		Message: "bad request",
+		Data:    err.Error(),
 	}
-	c.Logger().Error(err)
-	errorPage := fmt.Sprintf("%d.html", code)
-	if err := c.File(errorPage); err != nil {
-		c.Logger().Error(err)
-	}
+	ctx.Response().WriteHeader(apiResponse.Status)
+	WriteToResponseBody(ctx, apiResponse)
 }
 
-func NotFound(err error, c echo.Context) {
-	code := http.StatusNotFound
-	if he, ok := err.(*echo.HTTPError); ok {
-		code = he.Code
+func NotFound(err error, ctx echo.Context) {
+	ctx.Response().Header().Add("Content-Type", "application/json")
+	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+
+	apiResponse := domain.Response{
+		Status:  http.StatusNotFound,
+		Message: "not found",
+		Data:    err.Error(),
 	}
-	c.Logger().Error(err)
-	errorPage := fmt.Sprintf("%d.html", code)
-	if err := c.File(errorPage); err != nil {
-		c.Logger().Error(err)
-	}
+	ctx.Response().WriteHeader(apiResponse.Status)
+	WriteToResponseBody(ctx, apiResponse)
 }
