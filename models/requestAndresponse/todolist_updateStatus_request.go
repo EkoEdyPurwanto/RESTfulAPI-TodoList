@@ -1,6 +1,6 @@
 package requestAndresponse
 
 type TodoListUpdateStatus struct {
-	Id     int    `json:"id" validate:"required"`
+	Id     int    `json:"id"`
 	Status string `json:"status" validate:"required"`
 }
