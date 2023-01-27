@@ -26,7 +26,8 @@ func (handler *TodoListHandlerImpl) Create(ctx echo.Context, request requestAndr
 	err := ctx.Bind(&request)
 	if err != nil {
 		handler.Logging.Error(err)
-		panic(err)
+		helper.BadRequest(err, ctx)
+		return err
 	}
 
 	validate := validator.New()
