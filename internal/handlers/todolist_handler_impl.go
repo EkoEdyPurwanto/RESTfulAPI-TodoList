@@ -59,8 +59,9 @@ func (handler *TodoListHandlerImpl) Create(ctx echo.Context, request requestAndr
 	}
 	handler.Logging.Print(response.Message)
 
-	ctx.Response().Header().Add("Content-Type", "application/json")
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
+
 	ctx.Response().WriteHeader(response.Status)
 	helper.WriteToResponseBody(ctx, response)
 
@@ -94,8 +95,8 @@ func (handler *TodoListHandlerImpl) ReadAll(ctx echo.Context) error {
 	}
 	handler.Logging.Print("Read All Todo successfully")
 
-	ctx.Response().Header().Add("Content-Type", "application/json")
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
 	ctx.Response().WriteHeader(apiResponse.Status)
 	helper.WriteToResponseBody(ctx, apiResponse)
 
@@ -142,8 +143,8 @@ func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) e
 	}
 	handler.Logging.Info("Read Id Todo successfully")
 
-	ctx.Response().Header().Add("Content-Type", "application/json")
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
 	ctx.Response().WriteHeader(apiResponse.Status)
 	helper.WriteToResponseBody(ctx, apiResponse)
 
@@ -203,8 +204,8 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 	}
 	handler.Logging.Info("Update Title & Description Todo successfully")
 
-	ctx.Response().Header().Add("Content-Type", "application/json")
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
 	ctx.Response().WriteHeader(apiResponse.Status)
 	helper.WriteToResponseBody(ctx, apiResponse)
 
@@ -247,8 +248,8 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 	}
 	handler.Logging.Print("Update Status Todo successfully")
 
-	ctx.Response().Header().Add("Content-Type", "application/json")
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
 	ctx.Response().WriteHeader(apiResponse.Status)
 	helper.WriteToResponseBody(ctx, apiResponse)
 
@@ -282,8 +283,8 @@ func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) err
 	}
 	handler.Logging.Info("Delete Todo successfully")
 
-	ctx.Response().Header().Add("Content-Type", "application/json")
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
 	ctx.Response().WriteHeader(apiResponse.Status)
 	helper.WriteToResponseBody(ctx, apiResponse)
 
