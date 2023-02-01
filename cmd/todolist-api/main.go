@@ -7,13 +7,10 @@ import (
 	"LearnECHO/internal/router"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 func main() {
-	e := echo.New()
-	log := e.Logger
-
 	var cfg config.Config
 	err := envconfig.Process("", &cfg)
 	if err != nil {
@@ -25,9 +22,9 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	todoListHandler := handlers.NewTodoListHandlerImpl(connectDB, log)
+	todoListHandler := handlers.NewTodoListHandlerImpl(connectDB)
 
-	e = router.NewRouter(todoListHandler)
+	e := router.NewRouter(todoListHandler)
 
 	e.Logger.Fatal(e.Start(":1234"))
 }

@@ -8,25 +8,25 @@ import (
 	"errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"net/http"
 	"strconv"
 )
 
 type TodoListHandlerImpl struct {
-	DB      *sql.DB
-	Logging echo.Logger
+	DB *sql.DB
 }
 
-func NewTodoListHandlerImpl(DB *sql.DB, logging echo.Logger) *TodoListHandlerImpl {
-	return &TodoListHandlerImpl{DB: DB, Logging: logging}
+func NewTodoListHandlerImpl(DB *sql.DB) *TodoListHandlerImpl {
+	return &TodoListHandlerImpl{DB: DB}
 }
 
 func (handler *TodoListHandlerImpl) Create(ctx echo.Context, request requestAndresponse.TodoListCreateRequest) error {
 
 	err := ctx.Bind(&request)
 	if err != nil {
-		handler.Logging.Error(err)
 		helper.BadRequest(err, ctx)
+		log.Error(err)
 		return err
 	}
 
@@ -34,21 +34,21 @@ func (handler *TodoListHandlerImpl) Create(ctx echo.Context, request requestAndr
 	err = validate.Struct(request)
 	if err != nil {
 		helper.BadRequest(err, ctx)
-		handler.Logging.Error(err)
+		log.Error(err)
 		return err
 	}
 
 	SQL, err := handler.DB.Exec("INSERT INTO TodoList(title, description) VALUES(?, ?)", request.Title, request.Description)
 	if err != nil {
 		helper.InternalServerError(err, ctx)
-		handler.Logging.Error(err)
+		log.Error(err)
 		return err
 	}
 
 	lastID, err := SQL.LastInsertId()
 	if err != nil {
 		helper.InternalServerError(err, ctx)
-		handler.Logging.Error(err)
+		log.Error(err)
 		return err
 	}
 
@@ -57,7 +57,7 @@ func (handler *TodoListHandlerImpl) Create(ctx echo.Context, request requestAndr
 		Message: "you have successfully created todo list with ID: " + strconv.FormatInt(lastID, 10),
 		Data:    nil,
 	}
-	handler.Logging.Print(response.Message)
+	log.Print(response.Message)
 
 	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
@@ -75,14 +75,14 @@ func (handler *TodoListHandlerImpl) ReadAll(ctx echo.Context) error {
 	rows, err := handler.DB.Query("SELECT id, title, description, status FROM TodoList")
 	if err != nil {
 		helper.InternalServerError(err, ctx)
-		handler.Logging.Error(err)
+		log.Error(err)
 		return err
 	}
 
 	for rows.Next() {
 		err = rows.Scan(&todos.Id, &todos.Title, &todos.Description, &todos.Status)
 		if err != nil {
-			handler.Logging.Fatal(err)
+			log.Fatal(err)
 		} else {
 			sliceTodos = append(sliceTodos, todos)
 		}
@@ -93,7 +93,7 @@ func (handler *TodoListHandlerImpl) ReadAll(ctx echo.Context) error {
 		Message: "Success",
 		Data:    sliceTodos,
 	}
-	handler.Logging.Print("Read All Todo successfully")
+	log.Print("Read All Todo successfully")
 
 	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
@@ -110,7 +110,7 @@ func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) e
 	var count int
 	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=?", todolistId).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
-		handler.Logging.Error("Failed to check Todo existence in the database")
+		log.Error("Failed to check Todo existence in the database")
 		return err
 	}
 
@@ -122,7 +122,7 @@ func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) e
 	rows, err := handler.DB.Query("SELECT id, title, description, status FROM TodoList WHERE id = ?", todolistId)
 	if err != nil {
 		helper.InternalServerError(err, ctx)
-		handler.Logging.Error(err)
+		log.Error(err)
 		return err
 	}
 
@@ -130,7 +130,7 @@ func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) e
 		rows.Scan(&todos.Id, &todos.Title, &todos.Description, &todos.Status)
 
 		if err != nil {
-			handler.Logging.Fatal(err)
+			log.Fatal(err)
 		} else {
 			arrTodos = append(arrTodos, todos)
 		}
@@ -141,7 +141,7 @@ func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) e
 		Message: "Success",
 		Data:    todos,
 	}
-	handler.Logging.Info("Read Id Todo successfully")
+	log.Info("Read Id Todo successfully")
 
 	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
@@ -155,7 +155,7 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 
 	err := ctx.Bind(&request)
 	if err != nil {
-		handler.Logging.Error(err)
+		log.Error(err)
 		panic(err)
 		return err
 	}
@@ -163,7 +163,7 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 	var count int
 	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=?", todolistId).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
-		handler.Logging.Error("Failed to check Todo existence in the database")
+		log.Error("Failed to check Todo existence in the database")
 		return err
 	}
 
@@ -180,7 +180,7 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 
 	if err != nil {
 		helper.BadRequest(err, ctx)
-		handler.Logging.Error(err)
+		log.Error(err)
 		return err
 	}
 
@@ -194,7 +194,7 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 
 	if err != nil {
 		helper.InternalServerError(err, ctx)
-		handler.Logging.Print(err)
+		log.Print(err)
 	}
 
 	apiResponse := domain.Response{
@@ -202,7 +202,7 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 		Message: "Success",
 		Data:    nil,
 	}
-	handler.Logging.Info("Update Title & Description Todo successfully")
+	log.Info("Update Title & Description Todo successfully")
 
 	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
@@ -216,7 +216,7 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId int, request requestAndresponse.TodoListUpdateStatus) error {
 	err := ctx.Bind(&request)
 	if err != nil {
-		handler.Logging.Error(err)
+		log.Error(err)
 		panic(err)
 		return err
 	}
@@ -224,7 +224,7 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 	var count int
 	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=?", todolistId).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
-		handler.Logging.Error("Failed to check Todo existence in the database")
+		log.Error("Failed to check Todo existence in the database")
 		return err
 	}
 
@@ -237,7 +237,7 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 
 	if err != nil {
 		helper.InternalServerError(err, ctx)
-		handler.Logging.Error(err)
+		log.Error(err)
 		return err
 	}
 
@@ -246,7 +246,7 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 		Message: "Success",
 		Data:    nil,
 	}
-	handler.Logging.Print("Update Status Todo successfully")
+	log.Print("Update Status Todo successfully")
 
 	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
@@ -261,7 +261,7 @@ func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) err
 	var count int
 	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=?", todolistId).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
-		handler.Logging.Error(err)
+		log.Error(err)
 		return err
 	}
 
@@ -272,7 +272,7 @@ func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) err
 
 	if _, err := handler.DB.Exec("DELETE FROM TodoList WHERE id=?", todolistId); err != nil {
 		helper.InternalServerError(err, ctx)
-		handler.Logging.Error(err)
+		log.Error(err)
 		return err
 	}
 
@@ -281,7 +281,7 @@ func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) err
 		Message: "Todo with id " + strconv.Itoa(todolistId) + " has been deleted",
 		Data:    nil,
 	}
-	handler.Logging.Info("Delete Todo successfully")
+	log.Info("Delete Todo successfully")
 
 	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
