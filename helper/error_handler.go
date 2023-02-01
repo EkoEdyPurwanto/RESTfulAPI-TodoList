@@ -7,8 +7,8 @@ import (
 )
 
 func InternalServerError(err error, ctx echo.Context) {
-	ctx.Response().Header().Add("Content-Type", "application/json")
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
 
 	apiResponse := domain.Response{
 		Status:  http.StatusInternalServerError,
@@ -20,8 +20,8 @@ func InternalServerError(err error, ctx echo.Context) {
 }
 
 func BadRequest(err error, ctx echo.Context) {
-	ctx.Response().Header().Add("Content-Type", "application/json")
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
 
 	apiResponse := domain.Response{
 		Status:  http.StatusBadRequest,
@@ -33,8 +33,8 @@ func BadRequest(err error, ctx echo.Context) {
 }
 
 func NotFound(err error, ctx echo.Context) {
-	ctx.Response().Header().Add("Content-Type", "application/json")
-	ctx.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
 
 	apiResponse := domain.Response{
 		Status:  http.StatusNotFound,
