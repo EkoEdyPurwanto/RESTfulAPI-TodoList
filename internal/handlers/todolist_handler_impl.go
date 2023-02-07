@@ -55,7 +55,6 @@ func (handler *TodoListHandlerImpl) Create(ctx echo.Context, request requestAndr
 	response := domain.Response{
 		Status:  http.StatusCreated,
 		Message: "you have successfully created todo list with ID: " + strconv.FormatInt(lastID, 10),
-		Data:    nil,
 	}
 	log.Print(response.Message)
 
@@ -200,7 +199,6 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 	apiResponse := domain.Response{
 		Status:  http.StatusOK,
 		Message: "Success",
-		Data:    nil,
 	}
 	log.Info("Update Title & Description Todo successfully")
 
@@ -244,7 +242,6 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 	apiResponse := domain.Response{
 		Status:  http.StatusOK,
 		Message: "Success",
-		Data:    nil,
 	}
 	log.Print("Update Status Todo successfully")
 
@@ -279,7 +276,6 @@ func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) err
 	apiResponse := domain.Response{
 		Status:  http.StatusOK,
 		Message: "Todo with id " + strconv.Itoa(todolistId) + " has been deleted",
-		Data:    nil,
 	}
 	log.Info("Delete Todo successfully")
 
