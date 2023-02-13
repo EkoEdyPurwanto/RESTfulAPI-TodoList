@@ -228,7 +228,7 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 
 	if count == 0 {
 		helper.NotFound(errors.New(" id not found in db"), ctx)
-		return nil
+		return errors.New("id not found")
 	}
 
 	_, err = handler.DB.Exec("UPDATE TodoList SET status=? WHERE id=?", request.Status, todolistId)
