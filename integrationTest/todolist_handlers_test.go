@@ -16,7 +16,7 @@ import (
 	"testing"
 )
 
-func setupTestDB() (*sql.DB, error) {
+func SetupTestDB() (*sql.DB, error) {
 	dbDriver := "mysql"
 	dbUser := "eep"
 	dbPass := "1903"
@@ -29,11 +29,11 @@ func setupTestDB() (*sql.DB, error) {
 	return db, err
 }
 
-func truncateTodoList(db *sql.DB) {
+func TruncateTodoList(db *sql.DB) {
 	db.Exec("TRUNCATE TABLE TodoList ")
 }
 
-func setupRouter(db *sql.DB) *echo.Echo {
+func SetupRouter(db *sql.DB) *echo.Echo {
 	todoListHandler := handlers.NewTodoListHandlerImpl(db)
 
 	e := router.NewRouter(todoListHandler)
@@ -43,12 +43,12 @@ func setupRouter(db *sql.DB) *echo.Echo {
 
 func TestCreateTodolistSuccess(t *testing.T) {
 	// setup
-	conn, err := setupTestDB()
+	conn, err := SetupTestDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	truncateTodoList(conn)
-	router := setupRouter(conn)
+	TruncateTodoList(conn)
+	router := SetupRouter(conn)
 
 	requestBody := strings.NewReader(`{"title" : "test Title", "description": "test Description"}`)
 
@@ -82,12 +82,12 @@ func TestCreateTodolistSuccess(t *testing.T) {
 
 func TestCreateTodoListFailed(t *testing.T) {
 	// setup
-	conn, err := setupTestDB()
+	conn, err := SetupTestDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	truncateTodoList(conn)
-	router := setupRouter(conn)
+	TruncateTodoList(conn)
+	router := SetupRouter(conn)
 
 	requestBody := strings.NewReader(`{"title" : "", "description": ""}`)
 	httpRequest := httptest.NewRequest(echo.POST, "http://localhost:1234/api.todolist.com/todolist/managed-todolist", requestBody)
@@ -112,11 +112,11 @@ func TestCreateTodoListFailed(t *testing.T) {
 
 func TestUpdateTitleAndDescriptionSuccess(t *testing.T) {
 	// setup
-	conn, err := setupTestDB()
+	conn, err := SetupTestDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	truncateTodoList(conn)
+	TruncateTodoList(conn)
 
 	tx, _ := conn.Begin()
 	result, err := tx.Exec("INSERT INTO TodoList (title, description) VALUES (?, ?)", "Buy Milk", "Buy 1 liter of milk")
@@ -129,7 +129,7 @@ func TestUpdateTitleAndDescriptionSuccess(t *testing.T) {
 	}
 	tx.Commit()
 
-	router := setupRouter(conn)
+	router := SetupRouter(conn)
 
 	requestBody := strings.NewReader(`{"title" : "Update Title", "description": "Update Description"}`)
 	httpRequest := httptest.NewRequest(echo.PATCH, "http://localhost:1234/api.todolist.com/todolists/managed-todolists/"+strconv.FormatInt(id, 10), requestBody)
@@ -159,11 +159,11 @@ func TestUpdateTitleAndDescriptionSuccess(t *testing.T) {
 
 func TestUpdateTitleAndDescriptionFailed(t *testing.T) {
 	// setup
-	conn, err := setupTestDB()
+	conn, err := SetupTestDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	truncateTodoList(conn)
+	TruncateTodoList(conn)
 
 	tx, _ := conn.Begin()
 	result, err := tx.Exec("INSERT INTO TodoList (title, description) VALUES (?, ?)", "Buy Milk", "Buy 1 liter of milk")
@@ -176,7 +176,7 @@ func TestUpdateTitleAndDescriptionFailed(t *testing.T) {
 	}
 	tx.Commit()
 
-	router := setupRouter(conn)
+	router := SetupRouter(conn)
 
 	requestBody := strings.NewReader(`{"title" : "", "description": ""}`)
 	httpRequest := httptest.NewRequest(echo.PATCH, "http://localhost:1234/api.todolist.com/todolists/managed-todolists/"+strconv.FormatInt(id, 10), requestBody)
@@ -201,11 +201,11 @@ func TestUpdateTitleAndDescriptionFailed(t *testing.T) {
 
 func TestUpdateStatusSuccess(t *testing.T) {
 	// setup
-	conn, err := setupTestDB()
+	conn, err := SetupTestDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	truncateTodoList(conn)
+	TruncateTodoList(conn)
 
 	tx, _ := conn.Begin()
 	result, err := tx.Exec("INSERT INTO TodoList (title, description) VALUES (?, ?)", "Buy Milk", "Buy 1 liter of milk")
@@ -218,7 +218,7 @@ func TestUpdateStatusSuccess(t *testing.T) {
 	}
 	tx.Commit()
 
-	router := setupRouter(conn)
+	router := SetupRouter(conn)
 
 	requestBody := strings.NewReader(`{"status" : "DONE"}`)
 	httpRequest := httptest.NewRequest(echo.PUT, "http://localhost:1234/api.todolist.com/todolist/managed-todolist/"+strconv.FormatInt(id, 10), requestBody)
@@ -248,11 +248,11 @@ func TestUpdateStatusSuccess(t *testing.T) {
 
 func TestUpdateStatusFailed(t *testing.T) {
 	// setup
-	conn, err := setupTestDB()
+	conn, err := SetupTestDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	truncateTodoList(conn)
+	TruncateTodoList(conn)
 
 	tx, _ := conn.Begin()
 	result, err := tx.Exec("INSERT INTO TodoList (title, description) VALUES (?, ?)", "Buy Milk", "Buy 1 liter of milk")
@@ -265,7 +265,7 @@ func TestUpdateStatusFailed(t *testing.T) {
 	}
 	tx.Commit()
 
-	router := setupRouter(conn)
+	router := SetupRouter(conn)
 
 	requestBody := strings.NewReader(`{"status" : ""}`)
 	httpRequest := httptest.NewRequest(echo.PATCH, "http://localhost:1234/api.todolist.com/todolists/managed-todolists/"+strconv.FormatInt(id, 10), requestBody)
@@ -290,12 +290,12 @@ func TestUpdateStatusFailed(t *testing.T) {
 
 func TestGetByIdFailed(t *testing.T) {
 	// setup
-	conn, err := setupTestDB()
+	conn, err := SetupTestDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	truncateTodoList(conn)
-	router := setupRouter(conn)
+	TruncateTodoList(conn)
+	router := SetupRouter(conn)
 
 	httpRequest := httptest.NewRequest(echo.GET, "http://localhost:1234/api.todolist.com/todolists/managed-todolists/404", nil)
 	httpRequest.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -320,11 +320,11 @@ func TestGetByIdFailed(t *testing.T) {
 
 func TestDeleteSuccess(t *testing.T) {
 	// setup
-	conn, err := setupTestDB()
+	conn, err := SetupTestDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	truncateTodoList(conn)
+	TruncateTodoList(conn)
 
 	tx, _ := conn.Begin()
 	result, err := tx.Exec("INSERT INTO TodoList (title, description) VALUES (?, ?)", "Buy Milk", "Buy 1 liter of milk")
@@ -337,7 +337,7 @@ func TestDeleteSuccess(t *testing.T) {
 	}
 	tx.Commit()
 
-	router := setupRouter(conn)
+	router := SetupRouter(conn)
 
 	httpRequest := httptest.NewRequest(echo.DELETE, "http://localhost:1234/api.todolist.com/todolist/manage-todolist/"+strconv.FormatInt(id, 10), nil)
 	httpRequest.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -361,12 +361,12 @@ func TestDeleteSuccess(t *testing.T) {
 
 func TestDeleteFailed(t *testing.T) {
 	// setup
-	conn, err := setupTestDB()
+	conn, err := SetupTestDB()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	truncateTodoList(conn)
-	router := setupRouter(conn)
+	TruncateTodoList(conn)
+	router := SetupRouter(conn)
 
 	httpRequest := httptest.NewRequest(echo.DELETE, "http://localhost:1234/api.todolist.com/todolist/manage-todolist/404", nil)
 	httpRequest.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
