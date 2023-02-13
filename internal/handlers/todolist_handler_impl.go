@@ -168,7 +168,7 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 
 	if count == 0 {
 		helper.NotFound(errors.New(" id not found in db"), ctx)
-		return nil
+		return errors.New("id not found")
 	}
 
 	validate := validator.New()
