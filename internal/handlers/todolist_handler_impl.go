@@ -264,7 +264,7 @@ func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) err
 
 	if count == 0 {
 		helper.NotFound(errors.New(" id not found in the db"), ctx)
-		return nil
+		return errors.New("id not found")
 	}
 
 	if _, err := handler.DB.Exec("DELETE FROM TodoList WHERE id=?", todolistId); err != nil {
