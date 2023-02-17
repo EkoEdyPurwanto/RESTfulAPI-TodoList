@@ -88,21 +88,115 @@ func TestTodoListHandlerImpl_Create(t *testing.T) {
 			err := tt.handler.Create(c, tt.args.request)
 
 			if (err != nil) != tt.wantErr {
-				t.Errorf("UpdateTitleAndDescription() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Create() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
 			if rec.Code != tt.want {
-				t.Errorf("UpdateTitleAndDescription() got = %v, want %v", rec.Code, tt.want)
+				t.Errorf("Create() got = %v, want %v", rec.Code, tt.want)
 			}
 		})
 	}
 }
 
 func TestTodoListHandlerImpl_ReadAll(t *testing.T) {
+	db, err := sql.Open("mysql", "eep:1903@/RESTfulAPI_todos_test")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	handler := NewTodoListHandlerImpl(db)
+
+	tests := []struct {
+		name    string
+		handler *TodoListHandlerImpl
+		want    int
+	}{
+		{
+			name:    "Success - Read All Todo",
+			handler: handler,
+			want:    http.StatusOK,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "http://localhost:1234/api.todolist.com/todolists/managed-todolists", nil)
+			rec := httptest.NewRecorder()
+			c := echo.New().NewContext(req, rec)
+
+			err := tt.handler.ReadAll(c)
+
+			if err != nil {
+				t.Errorf("ReadAll() error = %v", err)
+				return
+			}
+
+			if rec.Code != tt.want {
+				t.Errorf("ReadAll() got = %v, want %v", rec.Code, tt.want)
+			}
+		})
+	}
 }
 
 func TestTodoListHandlerImpl_ReadById(t *testing.T) {
+	db, err := sql.Open("mysql", "eep:1903@/RESTfulAPI_todos_test")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	handler := NewTodoListHandlerImpl(db)
+
+	type args struct {
+		todolistId int
+	}
+
+	tests := []struct {
+		name    string
+		handler *TodoListHandlerImpl
+		args    args
+		wantErr bool
+		want    int
+	}{
+		{
+			name:    "Success - ReadById Todo",
+			handler: handler,
+			args: args{
+				todolistId: 1,
+			},
+			wantErr: false,
+			want:    http.StatusOK,
+		},
+		{
+			name:    "Error - Missing Todo id in the database",
+			handler: handler,
+			args: args{
+				todolistId: 99,
+			},
+			wantErr: true,
+			want:    http.StatusNotFound,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPatch, "http://localhost:1234/api.todolist.com/todolist/manage-todolist/", strings.NewReader(toJSON(tt.args.todolistId)))
+			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			rec := httptest.NewRecorder()
+			c := echo.New().NewContext(req, rec)
+			c.SetPath("/api.todolist.com/todolist/manage-todolist/:todolistId")
+			c.SetParamNames("todolistId")
+			c.SetParamValues(strconv.Itoa(tt.args.todolistId))
+
+			err := tt.handler.Delete(c, tt.args.todolistId)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeleteStatus() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if rec.Code != tt.want {
+				t.Errorf("DeleteStatus() got = %v, want %v", rec.Code, tt.want)
+			}
+		})
+	}
 }
 
 func TestTodoListHandlerImpl_UpdateTitleAndDescription(t *testing.T) {
