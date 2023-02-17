@@ -231,6 +231,17 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 		return errors.New("id not found")
 	}
 
+	validate := validator.New()
+	err = validate.Struct(requestAndresponse.TodoListUpdateStatus{
+		Status: request.Status,
+	})
+
+	if err != nil {
+		helper.BadRequest(err, ctx)
+		log.Error(err)
+		return err
+	}
+
 	_, err = handler.DB.Exec("UPDATE TodoList SET status=? WHERE id=?", request.Status, todolistId)
 
 	if err != nil {
