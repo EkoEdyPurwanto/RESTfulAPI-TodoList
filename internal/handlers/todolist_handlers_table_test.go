@@ -221,7 +221,7 @@ func TestTodoListHandlerImpl_UpdateStatus(t *testing.T) {
 		want    int
 	}{
 		{
-			name:    "Success - Update Title And Description Todo",
+			name:    "Success - Update Status Todo",
 			handler: handler,
 			args: args{
 				todolistId: 1,
@@ -245,7 +245,7 @@ func TestTodoListHandlerImpl_UpdateStatus(t *testing.T) {
 			want:    http.StatusNotFound,
 		},
 		{
-			name:    "Error - Bad request due to invalid title",
+			name:    "Error - Bad request due to invalid Status",
 			handler: handler,
 			args: args{
 				todolistId: 1,
@@ -257,7 +257,7 @@ func TestTodoListHandlerImpl_UpdateStatus(t *testing.T) {
 			want:    http.StatusBadRequest,
 		},
 		{
-			name:    "Error - Bad request due to invalid description",
+			name:    "Error - Bad request due to NGASAL in Status Must PENDING OR DONE",
 			handler: handler,
 			args: args{
 				todolistId: 1,
