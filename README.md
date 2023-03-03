@@ -1,4 +1,4 @@
-# myRESTfulAPI_TodoList
+# RESTfulAPI TodoList
 
 fitur utama dari web service ini adalah pengguna dapat mengelola dan mengatur tugas-tugas yang harus dikerjakan, dengan cara mencatat, menandai status.
 
