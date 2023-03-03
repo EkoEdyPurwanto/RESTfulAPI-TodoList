@@ -30,7 +30,10 @@ func SetupTestDB() (*sql.DB, error) {
 }
 
 func TruncateTodoList(db *sql.DB) {
-	db.Exec("TRUNCATE TABLE TodoList ")
+	err, _ := db.Exec("TRUNCATE TABLE TodoList ")
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 func SetupRouter(db *sql.DB) *echo.Echo {
@@ -65,7 +68,10 @@ func TestCreateTodolistSuccess(t *testing.T) {
 
 	body, _ := io.ReadAll(response.Body)
 	var responseBody map[string]interface{}
-	json.Unmarshal(body, &responseBody)
+	err = json.Unmarshal(body, &responseBody)
+	if err != nil {
+		log.Error(err)
+	}
 
 	// Assertion
 	assert.Equal(t, 201, int(responseBody["status"].(float64)))
@@ -103,7 +109,10 @@ func TestCreateTodoListFailed(t *testing.T) {
 
 	body, _ := io.ReadAll(response.Body)
 	var responseBody map[string]interface{}
-	json.Unmarshal(body, &responseBody)
+	err = json.Unmarshal(body, &responseBody)
+	if err != nil {
+		log.Error(err)
+	}
 
 	// Assertion
 	assert.Equal(t, 400, int(responseBody["status"].(float64)))
@@ -127,7 +136,10 @@ func TestUpdateTitleAndDescriptionSuccess(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		log.Error(err)
+	}
 
 	router := SetupRouter(conn)
 
@@ -174,7 +186,10 @@ func TestUpdateTitleAndDescriptionFailed(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		log.Error(err)
+	}
 
 	router := SetupRouter(conn)
 
@@ -192,7 +207,10 @@ func TestUpdateTitleAndDescriptionFailed(t *testing.T) {
 
 	body, _ := io.ReadAll(response.Body)
 	var responseBody map[string]interface{}
-	json.Unmarshal(body, &responseBody)
+	err = json.Unmarshal(body, &responseBody)
+	if err != nil {
+		log.Error(err)
+	}
 
 	// Assertion
 	assert.Equal(t, 400, int(responseBody["status"].(float64)))
@@ -216,7 +234,10 @@ func TestUpdateStatusSuccess(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		log.Error(err)
+	}
 
 	router := SetupRouter(conn)
 
@@ -263,7 +284,10 @@ func TestUpdateStatusFailed(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		log.Error(err)
+	}
 
 	router := SetupRouter(conn)
 
@@ -281,7 +305,10 @@ func TestUpdateStatusFailed(t *testing.T) {
 
 	body, _ := io.ReadAll(response.Body)
 	var responseBody map[string]interface{}
-	json.Unmarshal(body, &responseBody)
+	err = json.Unmarshal(body, &responseBody)
+	if err != nil {
+		log.Error(err)
+	}
 
 	// Assertion
 	assert.Equal(t, 400, int(responseBody["status"].(float64)))
@@ -310,7 +337,10 @@ func TestGetByIdFailed(t *testing.T) {
 
 	body, _ := io.ReadAll(response.Body)
 	var responseBody map[string]interface{}
-	json.Unmarshal(body, &responseBody)
+	err = json.Unmarshal(body, &responseBody)
+	if err != nil {
+		log.Error(err)
+	}
 
 	// Assertion
 	assert.Equal(t, 404, int(responseBody["status"].(float64)))
@@ -335,7 +365,10 @@ func TestDeleteSuccess(t *testing.T) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		log.Error(err)
+	}
 
 	router := SetupRouter(conn)
 
@@ -352,7 +385,10 @@ func TestDeleteSuccess(t *testing.T) {
 
 	body, _ := io.ReadAll(response.Body)
 	var responseBody map[string]interface{}
-	json.Unmarshal(body, &responseBody)
+	err = json.Unmarshal(body, &responseBody)
+	if err != nil {
+		log.Error(err)
+	}
 
 	// Assertion
 	assert.Equal(t, 200, int(responseBody["status"].(float64)))
@@ -381,7 +417,10 @@ func TestDeleteFailed(t *testing.T) {
 
 	body, _ := io.ReadAll(response.Body)
 	var responseBody map[string]interface{}
-	json.Unmarshal(body, &responseBody)
+	err = json.Unmarshal(body, &responseBody)
+	if err != nil {
+		log.Error(err)
+	}
 
 	// Assertion
 	assert.Equal(t, 404, int(responseBody["status"].(float64)))

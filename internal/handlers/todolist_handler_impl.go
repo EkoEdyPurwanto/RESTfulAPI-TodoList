@@ -104,7 +104,6 @@ func (handler *TodoListHandlerImpl) ReadAll(ctx echo.Context) error {
 
 func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) error {
 	var todos requestAndresponse.TodoListResponse
-	var arrTodos []requestAndresponse.TodoListResponse
 
 	var count int
 	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=?", todolistId).Scan(&count); err != nil {
@@ -126,12 +125,10 @@ func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) e
 	}
 
 	for rows.Next() {
-		rows.Scan(&todos.Id, &todos.Title, &todos.Description, &todos.Status)
+		err := rows.Scan(&todos.Id, &todos.Title, &todos.Description, &todos.Status)
 
 		if err != nil {
 			log.Fatal(err)
-		} else {
-			arrTodos = append(arrTodos, todos)
 		}
 	}
 
@@ -155,7 +152,6 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 	err := ctx.Bind(&request)
 	if err != nil {
 		log.Error(err)
-		panic(err)
 		return err
 	}
 
@@ -215,7 +211,6 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 	err := ctx.Bind(&request)
 	if err != nil {
 		log.Error(err)
-		panic(err)
 		return err
 	}
 
