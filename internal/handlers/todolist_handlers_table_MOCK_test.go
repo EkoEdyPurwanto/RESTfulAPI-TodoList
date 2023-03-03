@@ -5,22 +5,11 @@ import (
 	"errors"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
-
-type MockTodoListHandler struct {
-	mock.Mock
-	TodoListHandler
-}
-
-func (m *MockTodoListHandler) Create(c echo.Context, request requestAndresponse.TodoListCreateRequest) error {
-	args := m.Called(c, request)
-	return args.Error(0)
-}
 
 func TestMockTodoListHandlerImpl_Create(t *testing.T) {
 	handler := new(MockTodoListHandler)
