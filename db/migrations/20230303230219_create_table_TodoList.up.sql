@@ -1,8 +1,10 @@
-CREATE TABLE TodoList(
-                         id          int                      NOT NULL PRIMARY KEY AUTO_INCREMENT,
-                         title       varchar(50)              NOT NULL,
-                         description text                     NOT NULL,
-                         status      enum ('PENDING', 'DONE') NOT NULL DEFAULT 'PENDING',
-                         created_at  timestamp                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                         updated_at  timestamp                NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+CREATE TYPE todo_status AS ENUM ('PENDING', 'DONE');
+
+CREATE TABLE TodoList (
+                          id          SERIAL PRIMARY KEY,
+                          title       VARCHAR(50) NOT NULL,
+                          description TEXT NOT NULL,
+                          status      todo_status NOT NULL DEFAULT 'PENDING',
+                          created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                          updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

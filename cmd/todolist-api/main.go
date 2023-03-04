@@ -27,4 +27,5 @@ func main() {
 	e := router.NewRouter(todoListHandler)
 
 	e.Logger.Fatal(e.Start(":1234"))
+	//e.Logger.Fatal(e.Start(fmt.Sprintf("%s:%d", cfg.DBHost, cfg.DBPort)))
 }
