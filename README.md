@@ -15,6 +15,6 @@ Framework atau Library Yang Sudah di Implementasikan:
 2. VALIDASI = https://github.com/go-playground/validator and https://github.com/labstack/echo
 3. TESTING = https://github.com/stretchr/testify and https://github.com/vektra/mockery
 4. FIXING BUG OR SEARCH FOR CODE THAT IS NOT COMMON = https://github.com/golangci/golangci-lint
-5. PERSISTANCE DB = https://github.com/go-sql-driver/mysql
+5. PERSISTANCE DB = https://github.com/go-sql-driver/mysql and https://github.com/lib/pq
 6. ENV VAR = https://github.com/kelseyhightower/envconfig
 
