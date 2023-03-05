@@ -201,6 +201,7 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 
 	return nil
 }
+
 func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId int, request requestAndresponse.TodoListUpdateStatus) error {
 	err := ctx.Bind(&request)
 	if err != nil {
