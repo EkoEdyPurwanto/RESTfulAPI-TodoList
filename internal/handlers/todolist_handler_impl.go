@@ -7,11 +7,14 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	_ "github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type TodoListHandlerImpl struct {
@@ -23,8 +26,24 @@ func NewTodoListHandlerImpl(DB *sql.DB) *TodoListHandlerImpl {
 }
 
 func (handler *TodoListHandlerImpl) Create(ctx echo.Context, request requestAndresponse.TodoListCreateRequest) error {
+	// Check authentication
+	authHeader := ctx.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		helper.UnauthorizedError(errors.New("missing token"), ctx)
+		return errors.New("missing token")
+	}
 
-	err := ctx.Bind(&request)
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	token, err := helper.ValidateJWTToken(tokenString)
+	if err != nil {
+		helper.UnauthorizedError(err, ctx)
+		return err
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	userID := claims["user_id"].(float64)
+
+	err = ctx.Bind(&request)
 	if err != nil {
 		helper.BadRequest(err, ctx)
 		log.Error(err)
@@ -39,9 +58,10 @@ func (handler *TodoListHandlerImpl) Create(ctx echo.Context, request requestAndr
 		return err
 	}
 
-	SQL := `INSERT INTO TodoList(title, description) VALUES($1, $2) RETURNING id`
+	// Insert TodoList item
+	SQL := `INSERT INTO TodoList(user_id, title, description) VALUES($1, $2, $3) RETURNING todo_id`
 	var id int64
-	err = handler.DB.QueryRowContext(ctx.Request().Context(), SQL, request.Title, request.Description).Scan(&id)
+	err = handler.DB.QueryRowContext(ctx.Request().Context(), SQL, int64(userID), request.Title, request.Description).Scan(&id)
 	if err != nil {
 		helper.InternalServerError(err, ctx)
 		log.Error(err)
@@ -64,10 +84,27 @@ func (handler *TodoListHandlerImpl) Create(ctx echo.Context, request requestAndr
 }
 
 func (handler *TodoListHandlerImpl) ReadAll(ctx echo.Context) error {
+	// Check authentication
+	authHeader := ctx.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		helper.UnauthorizedError(errors.New("missing token"), ctx)
+		return errors.New("missing token")
+	}
+
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	token, err := helper.ValidateJWTToken(tokenString)
+	if err != nil {
+		helper.UnauthorizedError(err, ctx)
+		return err
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	userID := claims["user_id"].(float64)
+
 	var todos requestAndresponse.TodoListResponse
 	var sliceTodos []requestAndresponse.TodoListResponse
 
-	rows, err := handler.DB.Query("SELECT id, title, description, status FROM TodoList")
+	rows, err := handler.DB.Query("SELECT todo_id, user_id, title, description, status FROM TodoList WHERE user_id = $1", int64(userID))
 	if err != nil {
 		helper.InternalServerError(err, ctx)
 		log.Error(err)
@@ -75,7 +112,7 @@ func (handler *TodoListHandlerImpl) ReadAll(ctx echo.Context) error {
 	}
 
 	for rows.Next() {
-		err = rows.Scan(&todos.Id, &todos.Title, &todos.Description, &todos.Status)
+		err = rows.Scan(&todos.TodoID, &todos.UserID, &todos.Title, &todos.Description, &todos.Status)
 		if err != nil {
 			log.Fatal(err)
 		} else {
@@ -99,10 +136,25 @@ func (handler *TodoListHandlerImpl) ReadAll(ctx echo.Context) error {
 }
 
 func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) error {
-	var todos requestAndresponse.TodoListResponse
+	// Check authentication
+	authHeader := ctx.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		helper.UnauthorizedError(errors.New("missing token"), ctx)
+		return errors.New("missing token")
+	}
+
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	token, err := helper.ValidateJWTToken(tokenString)
+	if err != nil {
+		helper.UnauthorizedError(err, ctx)
+		return err
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	userID := int(claims["user_id"].(float64))
 
 	var count int
-	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=$1", todolistId).Scan(&count); err != nil {
+	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE todo_id=$1 AND user_id=$2", todolistId, userID).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
 		log.Error("Failed to check Todo existence in the database")
 		return err
@@ -113,25 +165,20 @@ func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) e
 		return nil
 	}
 
-	rows, err := handler.DB.Query("SELECT id, title, description, status FROM TodoList WHERE id = $1", todolistId)
+	var todo requestAndresponse.TodoListResponse
+	row := handler.DB.QueryRow("SELECT todo_id, user_id, title, description, status, created_at, updated_at FROM TodoList WHERE todo_id = $1 AND user_id = $2", todolistId, userID)
+	err = row.Scan(&todo.TodoID, &todo.UserID, &todo.Title, &todo.Description, &todo.Status, &todo.CreatedAt, &todo.UpdatedAt)
 	if err != nil {
 		helper.InternalServerError(err, ctx)
 		log.Error(err)
 		return err
 	}
 
-	for rows.Next() {
-		err := rows.Scan(&todos.Id, &todos.Title, &todos.Description, &todos.Status)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
+	// Return the response
 	apiResponse := domain.Response{
 		Status:  http.StatusOK,
 		Message: "Success",
-		Data:    todos,
+		Data:    todo,
 	}
 	log.Info("Read Id Todo successfully")
 
@@ -144,15 +191,32 @@ func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) e
 }
 
 func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, todolistId int, request requestAndresponse.TodoListUpdateTitleDescription) error {
+	// Check authentication
+	authHeader := ctx.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		helper.UnauthorizedError(errors.New("missing token"), ctx)
+		return errors.New("missing token")
+	}
 
-	err := ctx.Bind(&request)
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	token, err := helper.ValidateJWTToken(tokenString)
 	if err != nil {
+		helper.UnauthorizedError(err, ctx)
+		return err
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	userID := claims["user_id"].(float64)
+
+	err = ctx.Bind(&request)
+	if err != nil {
+		helper.BadRequest(err, ctx)
 		log.Error(err)
 		return err
 	}
 
 	var count int
-	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=$1", todolistId).Scan(&count); err != nil {
+	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE todo_id=$1 AND user_id=$2", todolistId, int64(userID)).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
 		log.Error("Failed to check Todo existence in the database")
 		return err
@@ -176,11 +240,11 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 	}
 
 	if request.Title != "" && request.Description == "" {
-		_, err = handler.DB.Exec("UPDATE TodoList SET title=$1 WHERE id=$2", request.Title, todolistId)
+		_, err = handler.DB.Exec("UPDATE TodoList SET title=$1 WHERE todo_id=$2 AND user_id=$3", request.Title, todolistId, int64(userID))
 	} else if request.Description != "" && request.Title == "" {
-		_, err = handler.DB.Exec("UPDATE TodoList SET description=$1 WHERE id=$2", request.Description, todolistId)
+		_, err = handler.DB.Exec("UPDATE TodoList SET description=$1 WHERE todo_id=$2 AND user_id=$3", request.Description, todolistId, int64(userID))
 	} else {
-		_, err = handler.DB.Exec("UPDATE TodoList SET title=$1, description=$2 WHERE id=$3", request.Title, request.Description, todolistId)
+		_, err = handler.DB.Exec("UPDATE TodoList SET title=$1, description=$2 WHERE todo_id=$3 AND user_id=$4", request.Title, request.Description, todolistId, int64(userID))
 	}
 
 	if err != nil {
@@ -203,22 +267,41 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 }
 
 func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId int, request requestAndresponse.TodoListUpdateStatus) error {
-	err := ctx.Bind(&request)
+	// Check authentication
+	authHeader := ctx.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		helper.UnauthorizedError(errors.New("missing token"), ctx)
+		return errors.New("missing token")
+	}
+
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	token, err := helper.ValidateJWTToken(tokenString)
 	if err != nil {
-		log.Error(err)
+		helper.UnauthorizedError(err, ctx)
 		return err
 	}
 
+	claims := token.Claims.(jwt.MapClaims)
+	userID := claims["user_id"].(float64)
+
+	// Check if the user has access to update the todo list item
 	var count int
-	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=$1", todolistId).Scan(&count); err != nil {
+	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE todo_id=$1 AND user_id=$2", todolistId, int(userID)).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
 		log.Error("Failed to check Todo existence in the database")
 		return err
 	}
 
 	if count == 0 {
-		helper.NotFound(errors.New(" id not found in db"), ctx)
+		helper.NotFound(errors.New("id not found in db"), ctx)
 		return errors.New("id not found")
+	}
+
+	err = ctx.Bind(&request)
+	if err != nil {
+		helper.BadRequest(err, ctx)
+		log.Error(err)
+		return err
 	}
 
 	validate := validator.New()
@@ -232,7 +315,7 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 		return err
 	}
 
-	_, err = handler.DB.Exec("UPDATE TodoList SET status=$1 WHERE id=$2", request.Status, todolistId)
+	_, err = handler.DB.Exec("UPDATE TodoList SET status=$1 WHERE todo_id=$2", request.Status, todolistId)
 
 	if err != nil {
 		helper.InternalServerError(err, ctx)
@@ -255,9 +338,26 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 }
 
 func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) error {
+	// Check authentication
+	authHeader := ctx.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		helper.UnauthorizedError(errors.New("missing token"), ctx)
+		return errors.New("missing token")
+	}
 
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	token, err := helper.ValidateJWTToken(tokenString)
+	if err != nil {
+		helper.UnauthorizedError(err, ctx)
+		return err
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	userID := int(claims["user_id"].(float64))
+
+	// Check if the TodoList item belongs to the user
 	var count int
-	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE id=$1", todolistId).Scan(&count); err != nil {
+	if err := handler.DB.QueryRowContext(ctx.Request().Context(), "SELECT COUNT(*) FROM TodoList WHERE todo_id=$1 AND user_id=$2", todolistId, userID).Scan(&count); err != nil {
 		helper.InternalServerError(err, ctx)
 		log.Error(err)
 		return err
@@ -268,7 +368,8 @@ func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) err
 		return errors.New("id not found")
 	}
 
-	if _, err := handler.DB.Exec("DELETE FROM TodoList WHERE id=$1", todolistId); err != nil {
+	// Delete the TodoList item
+	if _, err := handler.DB.ExecContext(ctx.Request().Context(), "DELETE FROM TodoList WHERE todo_id=$1 AND user_id=$2", todolistId, userID); err != nil {
 		helper.InternalServerError(err, ctx)
 		log.Error(err)
 		return err
@@ -284,6 +385,108 @@ func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) err
 	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
 	ctx.Response().WriteHeader(apiResponse.Status)
 	helper.WriteToResponseBody(ctx, apiResponse)
+
+	return nil
+}
+
+func (handler *TodoListHandlerImpl) Login(ctx echo.Context, request domain.Users) error {
+	err := ctx.Bind(&request)
+	if err != nil {
+		helper.BadRequest(err, ctx)
+		log.Error(err)
+		return err
+	}
+
+	// Find the user by their username
+	SQL := `SELECT user_id, username, password FROM users WHERE username = $1`
+	row := handler.DB.QueryRowContext(ctx.Request().Context(), SQL, request.Username)
+
+	var userID int64
+	var username, hashedPassword string
+	err = row.Scan(&userID, &username, &hashedPassword)
+	if err != nil {
+		helper.UnauthorizedError(errors.New("invalid credentials"), ctx)
+		log.Error(err)
+		return err
+	}
+
+	// Compare the provided password with the hashed password from the database
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(request.Password))
+	if err != nil {
+		helper.UnauthorizedError(errors.New("invalid credentialsSS"), ctx)
+		log.Error(err)
+		return err
+	}
+
+	// Generate a JWT token for the authenticated user
+	token, err := helper.GenerateJWTToken(userID)
+	if err != nil {
+		helper.InternalServerError(err, ctx)
+		log.Error(err)
+		return err
+	}
+
+	response := domain.Response{
+		Status:  http.StatusOK,
+		Message: "Welcome " + username + "! You have successfully logged in.",
+		Data:    token,
+	}
+	log.Print(response.Message)
+
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
+
+	ctx.Response().WriteHeader(response.Status)
+	helper.WriteToResponseBody(ctx, response)
+
+	return nil
+}
+
+func (handler *TodoListHandlerImpl) Register(ctx echo.Context, request domain.Users) error {
+	err := ctx.Bind(&request)
+	if err != nil {
+		helper.BadRequest(err, ctx)
+		log.Error(err)
+		return err
+	}
+
+	validate := validator.New()
+	err = validate.Struct(request)
+	if err != nil {
+		helper.BadRequest(err, ctx)
+		log.Error(err)
+		return err
+	}
+
+	// Hash the user's password before storing it in the database
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+	if err != nil {
+		helper.InternalServerError(err, ctx)
+		log.Error(err)
+		return err
+	}
+
+	// Insert the new user into the database
+	SQL := `INSERT INTO users(username, password, email) VALUES($1, $2, $3) RETURNING user_id`
+	var userID int64
+	err = handler.DB.QueryRowContext(ctx.Request().Context(), SQL, request.Username, hashedPassword, request.Email).Scan(&userID)
+	if err != nil {
+		helper.InternalServerError(err, ctx)
+		log.Error(err)
+		return err
+	}
+
+	response := domain.Response{
+		Status:  http.StatusCreated,
+		Message: "User registration successful with ID: " + strconv.FormatInt(userID, 10),
+	}
+	log.Print(response.Message)
+
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
+
+	ctx.Response().WriteHeader(response.Status)
+	helper.WriteToResponseBody(ctx, response)
 
 	return nil
 }
