@@ -18,4 +18,4 @@ Framework atau Library Yang Sudah di Implementasikan:
 5. PERSISTANCE DB = https://github.com/go-sql-driver/mysql and https://github.com/lib/pq
 6. ENV VAR = https://github.com/kelseyhightower/envconfig
 7. DETECTING SECURITY VULNERABILITIES IN DEPENDENCIES (go.mod) = https://github.com/google/osv-scanner
-
+8. MIDDLEWARE = https://github.com/golang-jwt/jwt (v4)
