@@ -1,0 +1,39 @@
+### SESUATU YG TIDAK MASUK DI DOCKER IMAGES ###
+
+# Ignore editor-specific files
+.vscode/
+.idea/
+.sublime-*
+*.swp
+
+# Ignore build artifacts and binaries
+/bin/
+/pkg/
+
+# Ignore version control files
+.git/
+.svn/
+.gitignore
+
+# Ignore configuration files or secrets
+config.yml
+secrets.yml
+.env
+env.sh
+script.sh
+
+# Ignore text editor backup files
+*~
+
+# Ignore Go test cache
+*.test
+
+# Ignore test or example files
+*_test.go
+*_example.go
+
+# Exclude documentation and README files
+/docs
+/README.md
+
+# Ignore any other files or directories specific to your project
