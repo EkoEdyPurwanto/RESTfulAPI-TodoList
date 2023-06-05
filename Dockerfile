@@ -27,8 +27,11 @@ FROM alpine:3.16
 WORKDIR /app
 
 # Copy only the necessary files from the build stage
-COPY --from=build /go/src/app/todoApp .
-COPY --from=build /go/src/app/internal/database/postgres/migrations/ ./internal/database/postgres/migrations/
+COPY --from=BUILD /go/src/app/todoApp .
+COPY --from=BUILD /go/src/app/internal/database/postgres/migrations/ ./internal/database/postgres/migrations/
+
+# Expose port 1234
+EXPOSE 1234
 
 ### CMD INSTRUCTION (if container run) ###
 CMD ["./todoApp"]
