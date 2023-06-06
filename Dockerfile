@@ -11,6 +11,9 @@ WORKDIR /go/src/app
 # Copy the Go modules manifests
 COPY go.mod go.sum ./
 
+### like a variable
+ARG appName=todoApp
+
 ### RUN INSTRUCTION (Build Stage) ###
 RUN go mod download && go mod tidy
 
@@ -18,13 +21,16 @@ RUN go mod download && go mod tidy
 COPY . .
 
 ### RUN INSTRUCTION (Build Stage) ###
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o todoApp ./cmd/todolist-api/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ${appName} ./cmd/todolist-api/main.go
 
 ### Production Stage ###
 FROM alpine:3.16
 
 # Set the working directory inside the container
 WORKDIR /app
+
+# Install curl
+RUN apk --no-cache add curl
 
 # Copy only the necessary files from the build stage
 COPY --from=BUILD /go/src/app/todoApp .
@@ -35,3 +41,4 @@ EXPOSE 1234
 
 ### CMD INSTRUCTION (if container run) ###
 CMD ["./todoApp"]
+#CMD ./${appName}
