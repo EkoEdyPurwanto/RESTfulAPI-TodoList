@@ -1,0 +1,7 @@
+version: "3.8"
+# services is container # Service for echoedyp-mycontainer
+services:
+  echoedyp-mycontainer:
+    container_name: echoedyp-mycontainer  # Assigns a custom name to the container
+    image: echoedyp/todo-app:v1  # Specifies the Docker image to use for the container
+    network_mode: host  # Uses the host network mode for the container
