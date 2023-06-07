@@ -190,6 +190,7 @@ func (handler *TodoListHandlerImpl) ReadById(ctx echo.Context, todolistId int) e
 	return nil
 }
 
+// gk perlu di fix udh betul
 func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, todolistId int, request requestAndresponse.TodoListUpdateTitleDescription) error {
 	// Check authentication
 	authHeader := ctx.Request().Header.Get("Authorization")
@@ -266,6 +267,7 @@ func (handler *TodoListHandlerImpl) UpdateTitleAndDescription(ctx echo.Context, 
 	return nil
 }
 
+// gk perlu di fix udh betul
 func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId int, request requestAndresponse.TodoListUpdateStatus) error {
 	// Check authentication
 	authHeader := ctx.Request().Header.Get("Authorization")
@@ -337,6 +339,7 @@ func (handler *TodoListHandlerImpl) UpdateStatus(ctx echo.Context, todolistId in
 	return nil
 }
 
+// gk perlu di fix udh betul
 func (handler *TodoListHandlerImpl) Delete(ctx echo.Context, todolistId int) error {
 	// Check authentication
 	authHeader := ctx.Request().Header.Get("Authorization")
