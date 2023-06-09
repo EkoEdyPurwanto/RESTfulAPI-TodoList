@@ -36,7 +36,7 @@ func Migrate(db *sql.DB) error {
 
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://internal/database/postgres/migrations",
-		"postgres", driver)
+		"restfulapi_todos", driver)
 	if err != nil {
 		return err
 	}
