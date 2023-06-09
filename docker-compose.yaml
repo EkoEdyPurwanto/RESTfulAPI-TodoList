@@ -2,6 +2,30 @@ version: "3.8"
 # services is container # Service for echoedyp-mycontainer
 services:
   echoedyp-mycontainer:
-    container_name: echoedyp-mycontainer  # Assigns a custom name to the container
-    image: echoedyp/todo-app:v1  # Specifies the Docker image to use for the container
-    network_mode: host  # Uses the host network mode for the container
+    container_name: echoedyp-mycontainer
+    image: echoedyp/todo-app:v1
+    ports:
+      - "1234:1234"
+    depends_on:
+      - psql-mycontainer
+#    restart: always
+    networks:
+      - todolists_networks
+    links:
+      - psql-mycontainer
+  psql-mycontainer:
+    container_name: psql-mycontainer
+    image: postgres:15.3-bullseye
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=eep
+      - POSTGRES_PASSWORD=1903
+      - POSTGRES_DB=restfulapi_todos
+    networks:
+      - todolists_networks
+
+networks:
+  todolists_networks:
+    name: todolists_networks
+    driver: bridge
