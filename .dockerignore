@@ -35,5 +35,7 @@ script.sh
 # Exclude documentation and README files
 /docs
 /README.md
+script.sh
+postgreSql.txt
 
 # Ignore any other files or directories specific to your project
