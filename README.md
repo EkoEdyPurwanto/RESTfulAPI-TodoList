@@ -9,6 +9,7 @@ Lebih detail nya, fitur yang ada di web service kali ini adalah:
 4. Pengguna dapat mengedit title & description
 5. Pengguna dapat mengedit status tugas/kegiatan (PENDING/DONE)
 6. Pengguna dapat menghapus daftar tugas/kegiatan
+7. Pengguna dapat register dan login
 
 Framework atau Library Yang Sudah di Implementasikan:
 1. ROUTER = https://github.com/labstack/echo
