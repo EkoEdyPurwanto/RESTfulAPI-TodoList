@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"LearnECHO/models/domain"
-	"LearnECHO/models/requestAndresponse"
-	"LearnECHO/utils"
+	"RESTfulAPI-TodoList/models/domain"
+	"RESTfulAPI-TodoList/models/requestAndresponse"
+	"RESTfulAPI-TodoList/utils"
 	"database/sql"
 	"errors"
 	"github.com/go-playground/validator/v10"

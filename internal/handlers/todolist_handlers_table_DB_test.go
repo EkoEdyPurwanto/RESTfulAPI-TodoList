@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"LearnECHO/models/requestAndresponse"
+	"RESTfulAPI-TodoList/models/requestAndresponse"
 	"database/sql"
 	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"

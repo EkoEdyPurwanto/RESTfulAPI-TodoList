@@ -1,4 +1,4 @@
-module LearnECHO
+module RESTfulAPI-TodoList
 
 go 1.19
 

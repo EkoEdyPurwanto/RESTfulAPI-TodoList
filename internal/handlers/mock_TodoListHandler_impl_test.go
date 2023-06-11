@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"LearnECHO/models/requestAndresponse"
+	"RESTfulAPI-TodoList/models/requestAndresponse"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"

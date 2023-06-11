@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"LearnECHO/models/domain"
-	"LearnECHO/models/requestAndresponse"
+	"RESTfulAPI-TodoList/models/domain"
+	"RESTfulAPI-TodoList/models/requestAndresponse"
 	"github.com/labstack/echo/v4"
 )
 

@@ -1,9 +1,9 @@
 package router
 
 import (
-	"LearnECHO/internal/handlers"
-	"LearnECHO/models/domain"
-	"LearnECHO/models/requestAndresponse"
+	"RESTfulAPI-TodoList/internal/handlers"
+	"RESTfulAPI-TodoList/models/domain"
+	"RESTfulAPI-TodoList/models/requestAndresponse"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"net/http"

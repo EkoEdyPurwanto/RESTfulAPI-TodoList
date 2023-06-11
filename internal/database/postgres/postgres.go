@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"LearnECHO/internal/config"
+	"RESTfulAPI-TodoList/internal/config"
 	"database/sql"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"

@@ -1,8 +1,8 @@
 package integrationTest
 
 import (
-	"LearnECHO/internal/handlers"
-	"LearnECHO/internal/router"
+	"RESTfulAPI-TodoList/internal/handlers"
+	"RESTfulAPI-TodoList/internal/router"
 	"database/sql"
 	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"

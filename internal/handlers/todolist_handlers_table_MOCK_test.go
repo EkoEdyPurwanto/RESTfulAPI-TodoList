@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"LearnECHO/models/requestAndresponse"
+	"RESTfulAPI-TodoList/models/requestAndresponse"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"

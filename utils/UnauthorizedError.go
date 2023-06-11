@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"LearnECHO/models/domain"
+	"RESTfulAPI-TodoList/models/domain"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
