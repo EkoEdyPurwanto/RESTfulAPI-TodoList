@@ -32,6 +32,11 @@ func main() {
 
 	e := router.NewRouter(todoListHandler)
 
-	e.Logger.Fatal(e.Start(":1234"))
-	//e.Logger.Fatal(e.Start(fmt.Sprintf("%s:%d", cfg.DBHost, cfg.DBPort)))
+	var srv config.Server
+	err = envconfig.Process("", &srv)
+	if err != nil {
+		log.Fatalf("failed when parsing server config: %v", err)
+	}
+
+	e.Logger.Fatal(e.Start(srv.Address))
 }

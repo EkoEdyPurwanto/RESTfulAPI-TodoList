@@ -8,3 +8,7 @@ type Config struct {
 	DBHost   string `envconfig:"DB_HOST" default:"localhost"`
 	DBPort   int    `envconfig:"DB_PORT" default:"5432"`
 }
+
+type Server struct {
+	Address string `envconfig:"SERVER_ADDRESS" default:":1234"`
+}
