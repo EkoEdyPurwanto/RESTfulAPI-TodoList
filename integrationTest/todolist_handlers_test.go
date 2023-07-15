@@ -16,6 +16,7 @@ import (
 	"testing"
 )
 
+// setupDb for integration test
 func SetupTestDB() (*sql.DB, error) {
 	dbDriver := "mysql"
 	dbUser := "eep"
