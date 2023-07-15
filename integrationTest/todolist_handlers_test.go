@@ -30,6 +30,7 @@ func SetupTestDB() (*sql.DB, error) {
 	return db, err
 }
 
+// truncate todolist table
 func TruncateTodoList(db *sql.DB) {
 	err, _ := db.Exec("TRUNCATE TABLE TodoList ")
 	if err != nil {
