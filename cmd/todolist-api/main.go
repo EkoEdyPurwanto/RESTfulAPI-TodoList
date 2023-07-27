@@ -1,10 +1,10 @@
 package main
 
 import (
-	"RESTfulAPI-TodoList/internal/config"
 	"RESTfulAPI-TodoList/internal/database/postgres"
 	"RESTfulAPI-TodoList/internal/handlers"
 	"RESTfulAPI-TodoList/internal/router"
+	"RESTfulAPI-TodoList/models/config"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/kelseyhightower/envconfig"
