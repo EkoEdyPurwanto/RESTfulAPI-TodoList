@@ -66,6 +66,22 @@ func NewRouter(todoListHandler handlers.TodoListHandler) *echo.Echo {
 		return todoListHandler.Delete(ctx, todolistId)
 	})
 
+	todoListGroup.POST("/managed-todolist/:todolistId/upload-picture", func(ctx echo.Context) error {
+		todolistId, err := strconv.Atoi(ctx.Param("todolistId"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid Todolist ID")
+		}
+		return todoListHandler.UploadPicture(ctx, todolistId)
+	})
+
+	todoListGroup.GET("/managed-todolist/:todolistId/picture/:pictureId", func(ctx echo.Context) error {
+		pictureID, err := strconv.Atoi(ctx.Param("pictureId"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid Picture ID")
+		}
+		return todoListHandler.GetPicture(ctx, pictureID)
+	})
+
 	// User endpoints
 	userGroup := e.Group("/api.todolist.com/user")
 
