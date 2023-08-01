@@ -12,7 +12,10 @@ import (
 	"github.com/labstack/gommon/log"
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -492,4 +495,140 @@ func (handler *TodoListHandlerImpl) Register(ctx echo.Context, request domain.Us
 	utils.WriteToResponseBody(ctx, response)
 
 	return nil
+}
+
+func (handler *TodoListHandlerImpl) UploadPicture(ctx echo.Context, todolistId int) error {
+	// Check authentication
+	authHeader := ctx.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		utils.UnauthorizedError(errors.New("missing token"), ctx)
+		return errors.New("missing token")
+	}
+
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	token, err := utils.ValidateJWTToken(tokenString)
+	if err != nil {
+		utils.UnauthorizedError(err, ctx)
+		return err
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	userID := int(claims["user_id"].(float64))
+
+	// Check if the TodoList item belongs to the user
+	var count int
+	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE todo_id=$1 AND user_id=$2", todolistId, userID).Scan(&count); err != nil {
+		utils.InternalServerError(err, ctx)
+		log.Error("Failed to check Todo existence in the database")
+		return err
+	}
+
+	if count == 0 {
+		utils.NotFound(errors.New("id not found in db"), ctx)
+		return errors.New("id not found")
+	}
+
+	// Check if file exists in the form data
+	file, err := ctx.FormFile("picture")
+	if err != nil {
+		utils.BadRequest(errors.New("picture file not found in form data"), ctx)
+		log.Error(err)
+		return err
+	}
+
+	// Check file size (max 1MB)
+	if file.Size > 1*1024*1024 {
+		utils.BadRequest(errors.New("file size exceeds the maximum allowed size (1MB)"), ctx)
+		log.Error("File size exceeds the maximum allowed size")
+		return errors.New("file size exceeds the maximum allowed size")
+	}
+
+	// Check file type (JPG, PNG, or WebP)
+	allowedFileTypes := map[string]bool{
+		"image/jpeg": true,
+		"image/png":  true,
+		"image/webp": true,
+	}
+
+	if !allowedFileTypes[file.Header.Get("Content-Type")] {
+		utils.BadRequest(errors.New("invalid file type. Allowed file types: jpg, png, webp"), ctx)
+		log.Error("Invalid file type")
+		return errors.New("invalid file type. Allowed file types: jpg, png, webp")
+	}
+
+	// Create directory for picture uploads if not exists
+	uploadDir := "./uploads"
+	err = os.MkdirAll(uploadDir, os.ModePerm)
+	if err != nil {
+		utils.InternalServerError(err, ctx)
+		log.Error("Failed to create directory for picture uploads")
+		return err
+	}
+
+	// Generate a unique file name
+	fileName := strconv.Itoa(todolistId) + "_" + strconv.FormatInt(int64(userID), 10) + filepath.Ext(file.Filename)
+	filePath := filepath.Join(uploadDir, fileName)
+
+	// Save the file to the server
+	src, err := file.Open()
+	if err != nil {
+		utils.InternalServerError(err, ctx)
+		log.Error("Failed to open uploaded file")
+		return err
+	}
+	defer src.Close()
+
+	dst, err := os.Create(filePath)
+	if err != nil {
+		utils.InternalServerError(err, ctx)
+		log.Error("Failed to create destination file")
+		return err
+	}
+	defer dst.Close()
+
+	if _, err = io.Copy(dst, src); err != nil {
+		utils.InternalServerError(err, ctx)
+		log.Error("Failed to copy file content")
+		return err
+	}
+
+	// Insert the picture record into the database
+	SQL := `INSERT INTO Picture(todo_id, path) VALUES($1, $2) RETURNING picture_id`
+	var pictureID int64
+	err = handler.DB.QueryRowContext(ctx.Request().Context(), SQL, todolistId, fileName).Scan(&pictureID)
+	if err != nil {
+		utils.InternalServerError(err, ctx)
+		log.Error("Failed to insert picture record into the database")
+		return err
+	}
+
+	response := domain.Response{
+		Status:  http.StatusCreated,
+		Message: "Picture uploaded successfully with ID: " + strconv.FormatInt(pictureID, 10),
+	}
+	log.Print(response.Message)
+
+	ctx.Response().Header().Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	ctx.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
+
+	ctx.Response().WriteHeader(response.Status)
+	utils.WriteToResponseBody(ctx, response)
+
+	return nil
+}
+
+func (handler *TodoListHandlerImpl) GetPicture(ctx echo.Context, pictureID int) error {
+	// Fetch picture details from the database
+	var picturePath string
+	row := handler.DB.QueryRow("SELECT path FROM Picture WHERE picture_id = $1", pictureID)
+	err := row.Scan(&picturePath)
+	if err != nil {
+		utils.InternalServerError(err, ctx)
+		log.Error(err)
+		return err
+	}
+
+	// Serve the picture file to the client
+	filePath := filepath.Join("./uploads", picturePath)
+	return ctx.File(filePath)
 }
