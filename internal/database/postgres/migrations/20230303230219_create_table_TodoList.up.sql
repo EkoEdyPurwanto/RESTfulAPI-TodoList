@@ -21,3 +21,13 @@ CREATE TABLE TodoList
     updated_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (user_id)
 );
+
+CREATE TABLE Picture
+(
+    picture_id SERIAL PRIMARY KEY,
+    todo_id    INTEGER      NOT NULL,
+    path       VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (todo_id) REFERENCES TodoList (todo_id)
+);
