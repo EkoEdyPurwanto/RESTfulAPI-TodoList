@@ -10,6 +10,7 @@ Lebih detail nya, fitur yang ada di web service kali ini adalah:
 5. Pengguna dapat mengedit status tugas/kegiatan (PENDING/DONE)
 6. Pengguna dapat menghapus daftar tugas/kegiatan
 7. Pengguna dapat register dan login
+8. Pengguna dapat melakukan upload file
 
 Framework atau Library Yang Sudah di Implementasikan:
 1. ROUTER = https://github.com/labstack/echo
@@ -20,3 +21,4 @@ Framework atau Library Yang Sudah di Implementasikan:
 6. ENV VAR = https://github.com/kelseyhightower/envconfig
 7. DETECTING SECURITY VULNERABILITIES IN DEPENDENCIES (go.mod) = https://github.com/google/osv-scanner
 8. MIDDLEWARE = https://github.com/golang-jwt/jwt (v4)
+9. AWS SDK = https://github.com/aws/aws-sdk-go-v2 (v2)
