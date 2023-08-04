@@ -1,6 +1,6 @@
-package config
+package conf
 
-type Config struct {
+type Conf struct {
 	DBDriver string `envconfig:"DB_DRIVER" default:"postgres"`
 	DBUser   string `envconfig:"DB_USER" default:"eepsql"`
 	DBPass   string `envconfig:"DB_PASS" default:"1903"`
