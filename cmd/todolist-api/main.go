@@ -4,7 +4,7 @@ import (
 	"RESTfulAPI-TodoList/internal/database/postgres"
 	"RESTfulAPI-TodoList/internal/handlers"
 	"RESTfulAPI-TodoList/internal/router"
-	"RESTfulAPI-TodoList/models/config"
+	"RESTfulAPI-TodoList/models/conf"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/kelseyhightower/envconfig"
@@ -12,10 +12,10 @@ import (
 )
 
 func main() {
-	var cfg config.Config
+	var cfg conf.Conf
 	err := envconfig.Process("", &cfg)
 	if err != nil {
-		log.Fatalf("failed when parsing config: %v", err)
+		log.Fatalf("failed when parsing conf: %v", err)
 	}
 
 	connectDB, err := postgres.ConnectDB(&cfg)
@@ -30,12 +30,14 @@ func main() {
 
 	todoListHandler := handlers.NewTodoListHandlerImpl(connectDB)
 
+	handlers.ConfigS3()
+
 	e := router.NewRouter(todoListHandler)
 
-	var srv config.Server
+	var srv conf.Server
 	err = envconfig.Process("", &srv)
 	if err != nil {
-		log.Fatalf("failed when parsing server config: %v", err)
+		log.Fatalf("failed when parsing server conf: %v", err)
 	}
 
 	e.Logger.Fatal(e.Start(srv.Address))

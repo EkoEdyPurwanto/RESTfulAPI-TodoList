@@ -4,8 +4,14 @@ import (
 	"RESTfulAPI-TodoList/models/domain"
 	"RESTfulAPI-TodoList/models/requestAndresponse"
 	"RESTfulAPI-TodoList/utils"
+	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
@@ -19,6 +25,14 @@ import (
 	"strconv"
 	"strings"
 )
+
+const (
+	AWS_S3_REGION = "us-east-1"                         // Region
+	AWS_S3_BUCKET = "save-picture-path-storage-service" // Bucket Name
+)
+
+// We will be using this client everywhere in our code
+var AwsS3Client *s3.Client
 
 type TodoListHandlerImpl struct {
 	DB *sql.DB
@@ -631,4 +645,82 @@ func (handler *TodoListHandlerImpl) GetPicture(ctx echo.Context, pictureID int) 
 	// Serve the picture file to the client
 	filePath := filepath.Join("./uploads", picturePath)
 	return ctx.File(filePath)
+}
+
+func (handler *TodoListHandlerImpl) UploadS3(ctx echo.Context) error {
+	// Check authentication
+	authHeader := ctx.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		utils.UnauthorizedError(errors.New("missing token"), ctx)
+		return errors.New("missing token")
+	}
+
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	token, err := utils.ValidateJWTToken(tokenString)
+	if err != nil {
+		utils.UnauthorizedError(err, ctx)
+		return err
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	userID := int(claims["user_id"].(float64))
+
+	// Check if the TodoList item belongs to the user
+	var count int
+	if err := handler.DB.QueryRow("SELECT COUNT(*) FROM TodoList WHERE user_id=$1", userID).Scan(&count); err != nil {
+		utils.InternalServerError(err, ctx)
+		log.Error("Failed to check Todo existence in the database")
+		return err
+	}
+
+	if count == 0 {
+		utils.NotFound(errors.New("id not found in db"), ctx)
+		return errors.New("id not found")
+	}
+
+	ctx.Request().ParseMultipartForm(10 << 20)
+
+	// Get a file from the form input name "file"
+	file, header, err := ctx.Request().FormFile("file")
+	if err != nil {
+		ShowError(ctx, http.StatusInternalServerError, "Something went wrong retrieving the file from the form")
+		return err
+	}
+	defer file.Close()
+
+	filename := header.Filename
+
+	uploader := manager.NewUploader(AwsS3Client)
+	_, err = uploader.Upload(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(AWS_S3_BUCKET),
+		Key:    aws.String(filename),
+		Body:   file,
+	})
+	if err != nil {
+		// Do your error handling here
+		ShowError(ctx, http.StatusInternalServerError, "Something went wrong uploading the file")
+		return err
+	}
+
+	fmt.Fprintf(ctx.Response(), "Successfully uploaded to %q\n", AWS_S3_BUCKET)
+	return nil
+
+}
+
+// configS3 creates the S3 client
+func ConfigS3() {
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(AWS_S3_REGION),
+		config.WithSharedConfigProfile("Pondok_Programmer"),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	AwsS3Client = s3.NewFromConfig(cfg)
+}
+
+func ShowError(ctx echo.Context, status int, message string) {
+	http.Error(ctx.Response(), message, status)
 }

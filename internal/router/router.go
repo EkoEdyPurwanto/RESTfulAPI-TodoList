@@ -82,6 +82,11 @@ func NewRouter(todoListHandler handlers.TodoListHandler) *echo.Echo {
 		return todoListHandler.GetPicture(ctx, pictureID)
 	})
 
+	todoListGroup.POST("/managed-todolist/upload-s3", func(ctx echo.Context) error {
+		// Call your UploadS3 function from here
+		return todoListHandler.UploadS3(ctx)
+	})
+
 	// User endpoints
 	userGroup := e.Group("/api.todolist.com/user")
 

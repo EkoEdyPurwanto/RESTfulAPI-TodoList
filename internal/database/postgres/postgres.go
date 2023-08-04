@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"RESTfulAPI-TodoList/models/config"
+	"RESTfulAPI-TodoList/models/conf"
 	"database/sql"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func ConnectDB(cfg *config.Config) (*sql.DB, error) {
+func ConnectDB(cfg *conf.Conf) (*sql.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DBHost,
 		cfg.DBPort,

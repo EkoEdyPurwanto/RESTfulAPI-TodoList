@@ -17,4 +17,5 @@ type TodoListHandler interface {
 	Register(ctx echo.Context, request domain.Users) error
 	UploadPicture(ctx echo.Context, todolistId int) error
 	GetPicture(ctx echo.Context, pictureID int) error
+	UploadS3(ctx echo.Context) error
 }
